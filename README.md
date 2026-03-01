@@ -144,6 +144,121 @@ Search users by first name.
 
 ---
 
+Blog API Documentation:
+
+This section documents the blog-related endpoints of the application.  
+The API allows creating blog posts and retrieving blogs with their associated users.
+
+---
+
+Create Blog Post
+
+Endpoint: POST /blog
+
+Description:
+Creates a new blog post for an existing user.
+
+Before inserting the blog:
+- The API checks if the provided `userId` exists in the `users` table.
+- If the user does not exist, it returns an error.
+- If the user exists, the blog is inserted into the `blogs` table.
+
+Request Body (JSON)
+
+```json
+{
+  "title": "Blog Title",
+  "content": "Blog Content",
+  "userId": 1
+}
+```
+
+Success Response (201 Created)
+
+```json
+{
+  "message": "Done",
+  "data": { ... }
+}
+```
+
+Error Responses:
+- 404 → Invalid account id
+- 500 → Failed to execute query
+
+Database Queries Used:
+
+Check if user exists:
+```sql
+SELECT * FROM users WHERE u_id = ?
+```
+
+Insert blog:
+```sql
+INSERT INTO blogs (b_title, b_content, b_userId) VALUES (?, ?, ?)
+```
+
+---
+
+Get All Blogs With Users:
+
+Endpoint: GET /blog
+
+Description:
+Retrieves all blogs along with their associated user data.
+
+The endpoint uses:
+- LEFT JOIN
+- RIGHT JOIN
+- UNION ALL
+
+This ensures:
+- All blogs are returned (even if no matching user exists).
+- All users are returned (even if they don’t have blogs).
+
+Database Query:
+
+```sql
+SELECT * 
+FROM blogs 
+LEFT JOIN users ON users.u_id = blogs.b_userId
+
+UNION ALL
+
+SELECT * 
+FROM blogs 
+RIGHT JOIN users ON users.u_id = blogs.b_userId;
+```
+
+Success Response (200 OK)
+
+```json
+{
+  "message": "done",
+  "data": [ ... ]
+}
+```
+
+---
+
+Database Tables:
+
+users:
+- u_id (Primary Key)
+- Other user-related fields
+
+blogs:
+- b_title
+- b_content
+- b_userId (Foreign Key → users.u_id)
+
+---
+
+Notes:
+- All queries use parameterized statements (`?`) to prevent SQL injection.
+- The API returns JSON responses.
+- Proper error handling is implemented for database failures and invalid user IDs.
+
 Project Status:
 This is a learning project created to practice backend development fundamentals.
 It is not production-ready and currently lacks:
