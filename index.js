@@ -122,6 +122,37 @@ app.get('/user', (req,res, next)=>{
     )
 })
 
+app.post('/blog', (req, res, next)=>{
+    const {title, content, userId} = req.body;
+    DBconnection.execute('select * from users where u_id=?', [userId], (err, data) =>{
+        if (err) {
+          return res.status(500).json({message:'fail to excute', err})
+        } 
+        if (!data.length) {
+          return res.status(404).json({message:'in-valid account id'})
+        }
+        DBconnection.execute('insert into blogs (b_title , b_content, b_userId) values (?,?,?)', [title, content, userId], (err, data)=>{
+            if (err) {
+          return res.status(500).json({message:'fail to excute', err})
+        } 
+          return res.status(201).json({message:'Done', data})
+        })
+        
+    })
+})
+
+app.get('/blog', (req, res, next)=>{
+    DBconnection.execute('select * from blogs left join users on users.u_id = blogs.b_userId union all select * from blogs right join users on users.u_id = blogs.b_userId ', (err, data) =>{
+        if (err) {
+          return res.status(500).json({message:'fail to excute', err})
+        } 
+       
+          return res.status(200).json({message:'done', data})
+       
+        
+    })
+})
+
 app.listen(PORT, () => {
   console.log(`Server is running on ${PORT}`);
 });
